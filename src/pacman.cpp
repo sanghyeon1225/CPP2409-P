@@ -7,6 +7,10 @@
 #include <thread>
 #include <chrono>
 #include <windows.h>
+#include <queue>
+#include <utility>
+
+#include "ghost.h"
 
 using namespace std;
 
@@ -17,6 +21,7 @@ void MovePacman(char input);
 void DisableCursorBlinking();
 void MainMenu();
 void MapSetting();
+void Initialize();
 
 // 팩맨 게임 맵의 가로와 세로 길이
 const int WIDTH = 27;
@@ -28,11 +33,12 @@ vector<int> score_board;
 // 게임 진행 중 점수를 나타낼 score (게임 종료시 해당 점수를 저장함)
 int score;
 
-// 팩맨과 고스트의 좌표를 나타내는 int 변수들 (아직 팩맨과 고스트의 움직임을 미구현하여 좌표 표현도 임의로 설정)
-int pac_x = 1;
-int pac_y = 1;
-int ghost_x = 10;
-int ghost_y = 14;
+// 팩맨과 좌표를 나타내는 변수
+int pac_x;
+int pac_y;
+
+// 유령 객체 4개를 관리할 벡터
+vector<Ghost> ghosts;  
 
 // 팩맨과 고스트의 위치를 시각적으로 표현
 char PACMAN = 'P';
@@ -62,7 +68,7 @@ char original_map[HEIGHT][WIDTH + 1] = {
 		"     #.##.#######.##.#     " ,
 		"######.##....#....##.######" ,
 		"#......#####.#.#####......#" ,
-		"#.####.#####.#.#####.####.#" ,
+		"#.####.#####.#.#####.####.#" , 
 		"#.####.#####.#.#####.####.#" ,
 		"#*..##...............##..*#" ,
 		"###.##.##.#######.##.##.###" ,
@@ -80,12 +86,24 @@ void DisplayMap() {
         for (int j = 0; j < WIDTH+1; j++) {
             if (i == pac_y && j == pac_x)
                 cout << PACMAN;
-            else if (i == ghost_y && j == ghost_x)
-                cout << GHOST;
-            else
-                cout << map[i][j];
+            else {
+                bool is_ghost = false;
+                for (int g = 0; g < 4; g++) {
+                    if (i == ghosts[g].ghost_y && j == ghosts[g].ghost_x)
+                    {
+                        if (i == pac_y && j == pac_x) {
+                            break;
+                        }
+
+                        cout << GHOST; // 유령 출력
+                        is_ghost = true;
+                        break;
+                    }
+                }
+                if (!is_ghost)
+                    cout << map[i][j];
+            }
         }
-        cout << "                    ";
         cout << endl;
     }
     cout << "현재 점수 : " << score << endl;
@@ -121,6 +139,24 @@ void ClearScreen() {
     SetConsoleCursorPosition(hConsole, coord);
 }
 
+void Initialize()
+{
+    pac_x = 12;
+    pac_y = 14;
+    
+    ghosts.clear();
+    ghosts.push_back(Ghost(1, 1));    // 유령 1
+    ghosts.push_back(Ghost(25, 1));   // 유령 2
+    ghosts.push_back(Ghost(1, 26));   // 유령 3
+    ghosts.push_back(Ghost(25, 26));  // 유령 4
+
+    score = 0;
+    for (int i = 0; i < 40; i++)
+    {
+        cout << " " << endl;
+    }
+    ClearScreen();
+}
 
 // 팩맨 이동 함수
 void MovePacman(char input) {
@@ -139,8 +175,6 @@ void MovePacman(char input) {
 
         pac_x = dx;
         pac_y = dy;
-
-        map[pac_y][pac_x] = PACMAN;
     }
 }
 
@@ -166,32 +200,45 @@ void MainMenu() {
         cin >> menu_number;
         switch (menu_number) {
             case 1: {
-                pac_x = 1;
-                pac_y = 1;
-                ghost_x = 10;
-                ghost_y = 14;
-                ClearScreen();
-                DisplayMap();
+                Initialize();
                 MapSetting();
-                score = 0;
+                DisplayMap();
                 char input;
-                while(true) {
+                int move_counter = 0; // 팩맨의 이동 횟수를 세는 카운터
+                const int ghost_speed = 2; // 팩맨이 2번 움직일 때 고스트 1번 움직임
+                bool game_running = true;
+
+                while(game_running) {
                     if(_kbhit()) {
                         input = _getch();
                     }
                     MovePacman(input);
+                    // 고스트의 이동 횟수를 조절하기 위함 (팩맨 2번 이동 마다 고스트 한번 이동)
+                    if (move_counter % ghost_speed == 0) {
+                        for (int i = 0; i < 4; i++){
+                            ghosts[i].MoveGhost(pac_x, pac_y, map); 
+                        }
+                        move_counter = 0;
+                    }
+                    move_counter++;
                     ClearScreen();
                     DisplayMap();
                     this_thread::sleep_for(chrono::milliseconds(100));
-                    if (pac_x == ghost_x && pac_y == ghost_y) {
-                        score_board.push_back(score);
-                        cout << "게임 종료!! 점수 = " << score << endl;
-                        break;
+
+                    // 게임 종료 조건 (팩맨과 유령의 좌표가 같으면 종료)
+                    for (int i = 0; i < 4; i++){
+                        if (pac_x == ghosts[i].ghost_x && pac_y == ghosts[i].ghost_y) {
+                            score_board.push_back(score); // 점수판에 현재 점수 저장
+                            cout << "게임 종료!! 점수 = " << score << endl;
+                            game_running = false;
+                            break;
+                        }
                     }
                 }
                 break;
             }
             case 2: {
+                Initialize();
                 ShowScoreboard();
                 break;
             }
@@ -207,8 +254,8 @@ void MainMenu() {
     }
 }
 
-
 int main() {
     DisableCursorBlinking(); // 커서 깜빡임 제거
     MainMenu();
 }
+
