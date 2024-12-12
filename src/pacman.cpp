@@ -86,18 +86,36 @@ char original_map[HEIGHT][WIDTH + 1] = {
 		"###########################" ,
 };
 
+
+void SetConsoleColor(int color) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, color);
+}
+
+
 // 맵을 출력하는 함수
 void DisplayMap() {
     for (int i = 0; i < HEIGHT; i++) {
         cout << "                    ";
         for (int j = 0; j < WIDTH+1; j++) {
-            if (i == pac_y && j == pac_x)
-                cout << PACMAN;
+            if (i == pac_y && j == pac_x) {
+                if (power_up) { //powerUp 모드면 팩맨의 색을 보라색으로 출력
+                    SetConsoleColor(5);
+                    cout << PACMAN;
+                    SetConsoleColor(7);
+                } else { // 일반 모드면 팩맨의 색을 노란색으로 출력
+                    SetConsoleColor(14);
+                    cout << PACMAN;
+                    SetConsoleColor(7);
+                }
+            }
             else {
                 bool is_ghost = false;
                 for (int g = 0; g < ghosts.size(); g++) {
                     if (i == ghosts[g].ghost_y && j == ghosts[g].ghost_x && ghosts[g].is_alive == true) {   
+                        SetConsoleColor(1 + g % 2); // 유령의 색을 파란색과 초록색으로 출력
                         cout << GHOST; // 유령 출력
+                        SetConsoleColor(7);
                         is_ghost = true;
                         break;
                     }
