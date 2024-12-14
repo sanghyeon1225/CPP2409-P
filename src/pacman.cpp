@@ -284,7 +284,13 @@ void MainMenu() {
                     }
                     move_counter++;
                     ClearScreen();
-                    DisplayMap();
+                    if (power_up) { // 시간 차이가 음수인 동안만 출력을 제한
+                        DisplayMap();
+                        cout << "PowerUp 모드 남은 시간: " << std::chrono::duration_cast<std::chrono::seconds>(real_time - power_time).count() << " 초" << std::endl;
+                    } else {
+                        DisplayMap();
+                        cout << "                                    " << endl;
+                    }
                     this_thread::sleep_for(chrono::milliseconds(100));
 
                     // 팩맨과 유령이 만났을 때 게임 종료 또는 유령 제거
@@ -297,11 +303,19 @@ void MainMenu() {
                                 ghosts[i].KillGhost();
                             } else {
                                 score_board.push_back(score); // 점수판에 현재 점수 저장
-                                cout << "게임 종료!! 점수 = " << score << endl;
+                                cout << "게임 오버!" << endl; 
+                                cout << "점수 = " << score << endl;
                                 game_running = false;
                                 break;
                             }
                         }
+                    }
+                    if (score == 2350) {
+                        score_board.push_back(score); // 점수판에 현재 점수 저장
+                        cout << "축하드립니다! 게임 클리어!!" << endl; 
+                        cout << "점수 = " << score << endl;
+                        game_running = false;
+                        break;
                     }
 
                 }
