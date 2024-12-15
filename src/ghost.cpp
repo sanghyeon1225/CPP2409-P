@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// power_up 모드를 구별할 boolean 변수
 extern bool power_up;
 
 void Ghost::KillGhost() {

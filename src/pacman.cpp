@@ -21,7 +21,8 @@ void MovePacman(char input);
 void DisableCursorBlinking();
 void MainMenu();
 void MapSetting();
-void Initialize();
+void Initialize(string game_diff);
+void SetConsoleColor(int color);
 
 // 팩맨 게임 맵의 가로와 세로 길이
 const int WIDTH = 27;
@@ -37,9 +38,8 @@ int score;
 int pac_x;
 int pac_y;
 
-// 유령 객체 4개를 관리할 벡터
+// 유령 객체들을 관리할 벡터
 vector<Ghost> ghosts;  
-vector<Ghost> respawn;
 // 팩맨과 고스트의 위치를 시각적으로 표현
 char PACMAN = 'P';
 char GHOST = 'G';
@@ -254,7 +254,7 @@ void MainMenu() {
         switch (menu_number) {
             case 1: {
                 string game_diff;
-                cout << "난이도를 선택해주세요. (easy, normal, hard)" << endl;
+                cout << "난이도를 선택해주세요. (easy, normal, hard): ";
                 cin >> game_diff;
 
                 if (game_diff == "easy" || game_diff == "normal" || game_diff == "hard") {
@@ -312,7 +312,7 @@ void MainMenu() {
                     }
                     if (score == 2350) {
                         score_board.push_back(score); // 점수판에 현재 점수 저장
-                        cout << "축하드립니다! 게임 클리어!!" << endl; 
+                        cout << "축하드립니다! 게임 클리어!!" << endl;  
                         cout << "점수 = " << score << endl;
                         game_running = false;
                         break;

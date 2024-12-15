@@ -8,7 +8,7 @@ public:
     int ghost_x, ghost_y;  // 유령의 위치 (x, y 좌표)
     int spawn_x, spawn_y;
     char moving_mode;
-    bool is_alive = false;
+    bool is_alive = true;
     std::chrono::steady_clock::time_point spawn_time;
     std::chrono::steady_clock::time_point now_time;
 
