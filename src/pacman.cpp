@@ -251,16 +251,24 @@ void MainMenu() {
         cout << "선택: ";
         int menu_number;
         cin >> menu_number;
+
+        if(cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // menu_number에 문자를 입력 받았을 때 생기던 무한 루프 오류 수정
+            continue;
+        }
+
+
         switch (menu_number) {
             case 1: {
                 string game_diff;
                 cout << "난이도를 선택해주세요. (easy, normal, hard): ";
                 cin >> game_diff;
-
+                
                 if (game_diff == "easy" || game_diff == "normal" || game_diff == "hard") {
                     Initialize(game_diff);
                 } else {
-                    game_flag = false;
+                    continue; // game_diff에 정상적인 값을 입력하지 않았으면 다시 메뉴로 돌아가도록 수정
                 }
 
                 MapSetting();
